@@ -14,57 +14,58 @@
 
 package gke
 
-// import (
-// 	"context"
-// 	"log"
-// 	"os"
-// 	"strings"
+import (
+	"context"
+	"log"
+	"os"
+	"strings"
 
-// 	"cloud.google.com/go/compute/metadata"
-// 	"contrib.go.opencensus.io/resource/gcp" // how to import local unpublished package??
+	"cloud.google.com/go/compute/metadata"
 
-// 	// TODO: import "go.opentelemetry.io/otel/sdk/resource/resourcekeys" after publishing it
-// 	// for now, the resourcekeys is in const.go
-// 	"go.opentelemetry.io/otel/api/kv"
-// 	"go.opentelemetry.io/otel/sdk/resource"
-// )
+	"go.opentelemetry.io/otel/api/kv"
+	"go.opentelemetry.io/otel/api/standard"
+	"go.opentelemetry.io/otel/sdk/resource"
 
-// // Detect detects associated resources when running in GKE environment.
-// func Detect(ctx context.Context) (*resource.Resource, error) {
-// 	if os.Getenv("KUBERNETES_SERVICE_HOST") == "" {
-// 		return nil, nil
-// 	}
+	"go.opentelemetry.io/contrib/detect/gcp"
+)
 
-// 	labels := []kv.KeyValue{}
-// 	clusterName, err := metadata.InstanceAttributeValue("cluster-name")
-// 	logError(err)
+// Detect detects associated resources when running in GKE environment.
+func Detect(ctx context.Context) (*resource.Resource, error) {
+	if os.Getenv("KUBERNETES_SERVICE_HOST") == "" {
+		return nil, nil
+	}
 
-// 	if clusterName != "" {
-// 		labels = append(labels, kv.String(K8SKeyClusterName, clusterName))
-// 	}
+	labels := []kv.KeyValue{
+		standard.K8SNamespaceNameKey.String(os.Getenv("NAMESPACE")),
+		standard.K8SPodNameKey.String(os.Getenv("HOSTNAME")),
+		standard.ContainerNameKey.String(os.Getenv("CONTAINER_NAME")),
+	}
 
-// 	labels = append(labels, kv.String(K8SKeyNamespaceName, os.Getenv("NAMESPACE")))
+	clusterName, err := metadata.InstanceAttributeValue("cluster-name")
+	logError(err)
 
-// 	labels = append(labels, kv.String(K8SKeyPodName, os.Getenv("HOSTNAME")))
+	if clusterName != "" {
+		labels = append(labels, standard.K8SClusterNameKey.String(clusterName))
+	}
 
-// 	labels = append(labels, kv.String(ContainerKeyName, os.Getenv("CONTAINER_NAME")))
+	k8sLabelRes := resource.New(labels...)
 
-// 	k8sLabelRes := resource.New(labels...), nil
+	gcpDetecor := gcp.GCP{}
 
-// 	gceLablRes, err := gce.Detect(ctx)
+	gceLablRes, err := gcpDetecor.Detect(ctx)
 
-// 	if err != nil {
-// 		return nil, nil
-// 	}
+	if err != nil {
+		return nil, err
+	}
 
-// 	return resource.Merge(gceLablRes, k8sLabelRes), nil
-// }
+	return resource.Merge(gceLablRes, k8sLabelRes), nil
+}
 
-// // logError logs error only if the error is present and it is not 'not defined'
-// func logError(err error) {
-// 	if err != nil {
-// 		if !strings.Contains(err.Error(), "not defined") {
-// 			log.Printf("Error retrieving gcp metadata: %v", err)
-// 		}
-// 	}
-// }
+// logError logs error only if the error is present and it is not 'not defined'
+func logError(err error) {
+	if err != nil {
+		if !strings.Contains(err.Error(), "not defined") {
+			log.Printf("Error retrieving gcp metadata: %v", err)
+		}
+	}
+}
