@@ -41,7 +41,7 @@ func Detect(ctx context.Context) (*resource.Resource, error) {
 		standard.ContainerNameKey.String(os.Getenv("CONTAINER_NAME")),
 	}
 
-	clusterName, err := metadata.InstanceAttributeValue("cluster-name")
+	clusterName, err := metadata.Get("cluster-name")
 	logError(err)
 
 	if clusterName != "" {
