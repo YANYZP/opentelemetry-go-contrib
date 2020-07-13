@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"contrib.go.opencensus.io/exporter/stackdriver/monitoredresource/gcp"
+	"go.opentelemetry.io/contrib/detect/gcp"
 )
 
 func main() {
 	gcp := gcp.GCP{}
-	res, err := gcp.Autodetect(context.Background())
-	fmt.Println(res)
+	res, err := gcp.Detect(context.Background())
+	fmt.Println(res, err)
 
 }
