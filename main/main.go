@@ -9,6 +9,6 @@ func main() {
 	gcp := GCE{}
 	res, _ := gcp.Detect(context.Background())
 	for _, ele := range res.Attributes() {
-		fmt.Println(ele)
+		fmt.Println(ele.Key, ":", ele.Value.AsString())
 	}
 }
