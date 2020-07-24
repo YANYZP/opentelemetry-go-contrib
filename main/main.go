@@ -7,6 +7,8 @@ import (
 
 func main() {
 	gcp := GCE{}
-	res, err := gcp.Detect(context.Background())
-	fmt.Println(res, err)
+	res, _ := gcp.Detect(context.Background())
+	for _, ele := range res.Attributes() {
+		fmt.Println(ele)
+	}
 }
